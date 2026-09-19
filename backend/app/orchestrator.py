@@ -10,13 +10,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from . import mock_llm, specialists, tools
 from .config import get_client, settings
+from .llm_utils import chat_json
 from .memory import memory_store
 from .schemas import Finding, InvestigateResult, MemoryMatch
 
 _SYNTHESIS_SYSTEM = (
     "You are the lead investigator synthesizing findings from several specialist "
     "agents into a single root-cause answer for an on-call engineer. Only use the "
-    "relevant findings provided. Respond ONLY as JSON: "
+    "relevant findings provided -- if few or none are relevant, say so plainly and "
+    "use medium/low confidence rather than inventing a cause. Respond ONLY as JSON, "
+    "no other text: "
     '{"root_cause": "...", "short_summary": "one sentence, under 140 chars", '
     '"evidence_trail": ["...", "..."], '
     '"suggested_action": "...", "confidence": "high|medium|low"}'
@@ -98,38 +101,37 @@ def investigate(question: str, job_name: str):
             synthesis = mock_llm.mock_synthesis(question, job_run, [f.model_dump() for f in findings])
         else:
             client = get_client()
-            resp = client.chat.completions.create(
-                model=settings.reasoning_model,
-                messages=[
-                    {"role": "system", "content": _SYNTHESIS_SYSTEM},
-                    {
-                        "role": "user",
-                        "content": json.dumps(
-                            {
-                                "question": question,
-                                "job": job_run,
-                                "findings": [f.model_dump() for f in findings],
-                            }
-                        ),
-                    },
-                ],
-                temperature=0.2,
-                response_format={"type": "json_object"},
-            )
-            synthesis = json.loads(resp.choices[0].message.content)
+            messages = [
+                {"role": "system", "content": _SYNTHESIS_SYSTEM},
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "question": question,
+                            "job": job_run,
+                            "findings": [f.model_dump() for f in findings],
+                        }
+                    ),
+                },
+            ]
+            synthesis = chat_json(client, settings.reasoning_model, messages, temperature=0.2)
     except Exception as exc:  # noqa: BLE001 - surface synthesis failure instead of hanging the stream
         yield {"type": "error", "message": f"synthesis failed: {exc}"}
         return
 
-    result = InvestigateResult(
-        question=question,
-        job_name=job_name,
-        findings=findings,
-        root_cause=synthesis["root_cause"],
-        evidence_trail=synthesis["evidence_trail"],
-        suggested_action=synthesis["suggested_action"],
-        confidence=synthesis["confidence"],
-    )
+    try:
+        result = InvestigateResult(
+            question=question,
+            job_name=job_name,
+            findings=findings,
+            root_cause=synthesis["root_cause"],
+            evidence_trail=synthesis["evidence_trail"],
+            suggested_action=synthesis["suggested_action"],
+            confidence=synthesis["confidence"],
+        )
+    except KeyError as exc:
+        yield {"type": "error", "message": f"synthesis response missing expected field: {exc}"}
+        return
 
     relevant_ticket = next((f for f in findings if f.domain == "tickets" and f.relevant), None)
     memory_store.add(

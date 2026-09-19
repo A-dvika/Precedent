@@ -25,6 +25,15 @@ class Settings:
 settings = Settings()
 
 
+def validate_settings() -> None:
+    """Fail fast and clearly on startup rather than confusingly mid-request."""
+    if not settings.demo_mode and not settings.nebius_api_key:
+        raise RuntimeError(
+            "DEMO_MODE=false but NEBIUS_API_KEY is empty -- set it in backend/.env, "
+            "or unset DEMO_MODE to fall back to demo mode automatically."
+        )
+
+
 @lru_cache
 def get_client() -> OpenAI:
     return OpenAI(

@@ -10,28 +10,24 @@ import json
 
 from . import mock_llm, tools
 from .config import get_client, settings
+from .llm_utils import chat_json
 from .schemas import Finding
 
 _SYSTEM = (
     "You are a specialist investigator for the {domain} system. "
     "Given raw data, decide whether it is relevant to the incident and summarize "
-    "what it shows in 1-2 sentences. Respond ONLY as JSON: "
+    "what it shows in 1-2 sentences. Respond ONLY as JSON, no other text: "
     '{{"relevant": true|false, "summary": "...", "evidence": "..."}}'
 )
 
 
 def _ask(domain: str, raw_data: str) -> dict:
     client = get_client()
-    resp = client.chat.completions.create(
-        model=settings.fast_model,
-        messages=[
-            {"role": "system", "content": _SYSTEM.format(domain=domain)},
-            {"role": "user", "content": raw_data},
-        ],
-        temperature=0.1,
-        response_format={"type": "json_object"},
-    )
-    return json.loads(resp.choices[0].message.content)
+    messages = [
+        {"role": "system", "content": _SYSTEM.format(domain=domain)},
+        {"role": "user", "content": raw_data},
+    ]
+    return chat_json(client, settings.fast_model, messages, temperature=0.1)
 
 
 def deploy_specialist(job_run: dict) -> Finding:

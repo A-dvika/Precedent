@@ -4,8 +4,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sse_starlette.sse import EventSourceResponse
 
+from .config import settings, validate_settings
 from .orchestrator import investigate
 from .schemas import InvestigateRequest
+
+validate_settings()
 
 app = FastAPI(title="Precedent")
 
@@ -19,7 +22,12 @@ app.add_middleware(
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "mode": "demo" if settings.demo_mode else "live",
+        "reasoning_model": settings.reasoning_model if not settings.demo_mode else None,
+        "fast_model": settings.fast_model if not settings.demo_mode else None,
+    }
 
 
 @app.post("/investigate")

@@ -56,9 +56,23 @@ demo-mode logic, kept in lockstep:
   deploy runs, so the shareable demo link never depends on a hosted backend
   staying up.
 
-The real-Nemotron-call path in `backend/` is wired but not yet verified —
-needs an API key and confirmation of the exact base URL / model catalog
-names from the Token Factory console.
+**Going live is a one-step change** — add `NEBIUS_API_KEY` to `backend/.env`
+and leave `DEMO_MODE` unset; it auto-detects the key and switches every
+Nemotron call from mock to real with no other code changes. The real-call
+path itself is hardened, not just wired: JSON-mode requests fall back to
+plain-text parsing if a provider rejects `response_format` (with a
+markdown-fence-tolerant parser), auth/model-not-found errors surface as
+clear messages instead of generic failures, and the app fails fast at
+startup instead of mid-request if `DEMO_MODE=false` is forced with no key.
+
+Run `python scripts/check_connection.py` (from `backend/`) right after
+adding your key — it pings both configured models directly and reports
+`[OK]`/`[FAIL]` per model, so you know in seconds whether the key, base
+URL, and model catalog names are right, without running a full
+investigation. (The guessed default base URL, `api.tokenfactory.nebius.com`,
+already returns a real structured `401` — not a connection error — when
+tested with a bad key, which is a strong signal it's correct; model catalog
+names are the more likely thing to need adjusting.)
 
 ## Setup
 
@@ -73,7 +87,11 @@ copy .env.example .env        # works as-is in demo mode, no key needed
 uvicorn app.main:app --reload
 ```
 
-Health check: `GET http://localhost:8000/health`
+Health check: `GET http://localhost:8000/health` — reports `"mode": "demo"` or
+`"mode": "live"` plus the active model names.
+
+Adding a real key later? Run `python scripts/check_connection.py` first
+(see "Project status" above) to confirm it's wired correctly.
 
 Run an investigation:
 

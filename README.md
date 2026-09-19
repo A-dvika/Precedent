@@ -32,19 +32,28 @@ across all of it in parallel and answers with citations, not a guess.
 
 ## Project status
 
-Fully working end to end in **demo mode** — no API key required. Backend
-(FastAPI + orchestrator + specialists + simulated dataset) and frontend
-(chat panel + live SVG system map) are wired together via SSE, and both
-demo acts (full investigation, then instant memory recall) run correctly
-against the seeded dataset. See [docs/demo_script.md](docs/demo_script.md).
+Fully working end to end in **demo mode** — no API key, and no backend
+required to try it. Both demo acts (full investigation, then instant memory
+recall) run correctly against the seeded dataset. See
+[docs/demo_script.md](docs/demo_script.md).
 
-Demo mode (`DEMO_MODE`, auto-enabled when `NEBIUS_API_KEY` is empty) swaps
-the Nemotron calls for deterministic, rule-based logic over the same
-structured tool output a real model call would see — same input/output
-shape, so switching to real Nemotron calls through Token Factory is a
-drop-in change, not a rewrite. That real-call path is wired but not yet
-verified — needs an API key and confirmation of the exact base URL / model
-catalog names from the Token Factory console.
+Demo mode swaps the Nemotron calls for deterministic, rule-based logic over
+the same structured tool output a real model call would see — same
+input/output shape, so switching to real Nemotron calls through Token
+Factory is a drop-in change, not a rewrite. There are two copies of this
+demo-mode logic, kept in lockstep:
+
+- **`backend/`** — the real architecture story (FastAPI, orchestrator,
+  specialists, SSE), with `DEMO_MODE` auto-enabled when `NEBIUS_API_KEY` is
+  empty. This is where real Nemotron calls get wired in.
+- **`frontend/src/local/`** — a JS port of the same logic running entirely
+  in the browser, no backend needed. This is what the standalone Vercel
+  deploy runs, so the shareable demo link never depends on a hosted backend
+  staying up.
+
+The real-Nemotron-call path in `backend/` is wired but not yet verified —
+needs an API key and confirmation of the exact base URL / model catalog
+names from the Token Factory console.
 
 ## Setup
 
@@ -77,11 +86,24 @@ memory-hit path (Act 2 of the demo script).
 ```bash
 cd frontend
 npm install
-copy .env.example .env
 npm run dev
 ```
 
-Opens on `http://localhost:5173`. Requires the backend running on `:8000`.
+Opens on `http://localhost:5173` — runs fully client-side, no backend
+needed. This is also the exact setup a Vercel deploy runs: build command
+`npm run build`, output directory `dist`, root directory `frontend`.
+
+## Deploying the demo (Vercel)
+
+The frontend is a static Vite build with no backend dependency, so it
+deploys as-is:
+
+1. Import this repo in Vercel
+2. Set **Root Directory** to `frontend`
+3. Framework preset: Vite (build command `npm run build`, output `dist`)
+4. Leave `VITE_API_BASE` unset — deploy
+
+No environment variables, no separate backend to host.
 
 ## License
 

@@ -1,10 +1,23 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
+import { investigateLocal } from "./local/orchestrator";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 /**
- * Streams /investigate as Server-Sent Events. `onEvent` is called once per
- * parsed event object. Returns a promise that resolves when the stream ends.
+ * Runs an investigation and streams events to `onEvent`, one per SSE/local
+ * event. With no VITE_API_BASE configured (the default -- and what the
+ * standalone Vercel deploy uses), this runs entirely client-side via the
+ * local orchestrator, so there's no backend to host at all. Set
+ * VITE_API_BASE to drive the UI from the real Python backend instead --
+ * same event shapes either way, so the rest of the app doesn't change.
  */
 export async function investigate(question, jobName, onEvent) {
+  if (!API_BASE) {
+    return investigateLocal(question, jobName, onEvent);
+  }
+  return investigateRemote(question, jobName, onEvent);
+}
+
+async function investigateRemote(question, jobName, onEvent) {
   const res = await fetch(`${API_BASE}/investigate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

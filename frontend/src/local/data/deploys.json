@@ -1,0 +1,29 @@
+[
+  {
+    "repo": "pricing-lib",
+    "version": "2.3.1",
+    "deployed_at": "2026-09-10T01:45:00Z",
+    "deployed_by": "svc-deploy-bot",
+    "target_service": "pricing-service",
+    "commit": "a3f9c12",
+    "notes": "bump shared pricing calculation library to 2.3.1"
+  },
+  {
+    "repo": "auth-gateway",
+    "version": "5.0.2",
+    "deployed_at": "2026-09-10T00:10:00Z",
+    "deployed_by": "svc-deploy-bot",
+    "target_service": "auth-gateway",
+    "commit": "9b12ee0",
+    "notes": "routine patch release"
+  },
+  {
+    "repo": "reporting-ui",
+    "version": "1.9.0",
+    "deployed_at": "2026-09-09T14:00:00Z",
+    "deployed_by": "j.alvarez",
+    "target_service": "reporting-ui",
+    "commit": "7dd21aa",
+    "notes": "minor UI fixes"
+  }
+]

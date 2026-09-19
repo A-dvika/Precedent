@@ -8,7 +8,7 @@ finishes by yielding a single {"type": "done", "result": InvestigateResult}.
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from . import specialists, tools
+from . import mock_llm, specialists, tools
 from .config import get_client, settings
 from .memory import memory_store
 from .schemas import Finding, InvestigateResult, MemoryMatch
@@ -17,7 +17,8 @@ _SYNTHESIS_SYSTEM = (
     "You are the lead investigator synthesizing findings from several specialist "
     "agents into a single root-cause answer for an on-call engineer. Only use the "
     "relevant findings provided. Respond ONLY as JSON: "
-    '{"root_cause": "...", "evidence_trail": ["...", "..."], '
+    '{"root_cause": "...", "short_summary": "one sentence, under 140 chars", '
+    '"evidence_trail": ["...", "..."], '
     '"suggested_action": "...", "confidence": "high|medium|low"}'
 )
 
@@ -31,6 +32,8 @@ def investigate(question: str, job_name: str):
         return
 
     yield {"type": "memory_check"}
+    if settings.demo_mode:
+        mock_llm.thinking_delay(0.4, 0.9)
     memory_hit = memory_store.find_match(SPECIALIST_SERVICE, job_run.get("error") or "")
     if memory_hit:
         yield {"type": "memory_hit", "incident_id": memory_hit.incident_id, "summary": memory_hit.summary}
@@ -82,26 +85,29 @@ def investigate(question: str, job_name: str):
 
     yield {"type": "synthesizing"}
     try:
-        client = get_client()
-        resp = client.chat.completions.create(
-            model=settings.reasoning_model,
-            messages=[
-                {"role": "system", "content": _SYNTHESIS_SYSTEM},
-                {
-                    "role": "user",
-                    "content": json.dumps(
-                        {
-                            "question": question,
-                            "job": job_run,
-                            "findings": [f.model_dump() for f in findings],
-                        }
-                    ),
-                },
-            ],
-            temperature=0.2,
-            response_format={"type": "json_object"},
-        )
-        synthesis = json.loads(resp.choices[0].message.content)
+        if settings.demo_mode:
+            synthesis = mock_llm.mock_synthesis(question, job_run, [f.model_dump() for f in findings])
+        else:
+            client = get_client()
+            resp = client.chat.completions.create(
+                model=settings.reasoning_model,
+                messages=[
+                    {"role": "system", "content": _SYNTHESIS_SYSTEM},
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "question": question,
+                                "job": job_run,
+                                "findings": [f.model_dump() for f in findings],
+                            }
+                        ),
+                    },
+                ],
+                temperature=0.2,
+                response_format={"type": "json_object"},
+            )
+            synthesis = json.loads(resp.choices[0].message.content)
     except Exception as exc:  # noqa: BLE001 - surface synthesis failure instead of hanging the stream
         yield {"type": "error", "message": f"synthesis failed: {exc}"}
         return
@@ -122,7 +128,7 @@ def investigate(question: str, job_name: str):
         job_name=job_name,
         service=SPECIALIST_SERVICE,
         error_text=job_run.get("error") or "",
-        summary=synthesis["root_cause"],
+        summary=synthesis.get("short_summary", synthesis["root_cause"]),
         root_cause=synthesis["root_cause"],
         ticket_id=_extract_ticket_id(relevant_ticket),
     )

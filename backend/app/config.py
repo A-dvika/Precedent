@@ -13,6 +13,14 @@ class Settings:
     reasoning_model: str = os.environ.get("NEMOTRON_REASONING_MODEL", "nvidia/nemotron-3-ultra")
     fast_model: str = os.environ.get("NEMOTRON_FAST_MODEL", "nvidia/nemotron-3-nano")
 
+    # Demo mode: deterministic, rule-based "findings" instead of real Nemotron
+    # calls -- runs offline, with no API key, and never flakes. Auto-enables
+    # when there's no API key; set DEMO_MODE=false to force real calls, or
+    # DEMO_MODE=true to force mock mode even with a key configured.
+    demo_mode: bool = os.environ.get("DEMO_MODE", "").lower() in ("true", "1") or (
+        not nebius_api_key and os.environ.get("DEMO_MODE", "").lower() != "false"
+    )
+
 
 settings = Settings()
 

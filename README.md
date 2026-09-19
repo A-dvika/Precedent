@@ -32,13 +32,19 @@ across all of it in parallel and answers with citations, not a guess.
 
 ## Project status
 
-Backend (FastAPI + orchestrator + specialists + simulated dataset) and
-frontend (chat panel + live SVG system map) are both scaffolded and wired
-together via SSE. Verified locally: server boots, tool connectors and memory
-matching are correct against the seeded demo data, and the event-handling
-logic (system map / chat rendering) is covered by reducer tests. Not yet
-verified: actual Nemotron calls through Token Factory — needs a real API key
-and confirmation of the exact base URL / model catalog names.
+Fully working end to end in **demo mode** — no API key required. Backend
+(FastAPI + orchestrator + specialists + simulated dataset) and frontend
+(chat panel + live SVG system map) are wired together via SSE, and both
+demo acts (full investigation, then instant memory recall) run correctly
+against the seeded dataset. See [docs/demo_script.md](docs/demo_script.md).
+
+Demo mode (`DEMO_MODE`, auto-enabled when `NEBIUS_API_KEY` is empty) swaps
+the Nemotron calls for deterministic, rule-based logic over the same
+structured tool output a real model call would see — same input/output
+shape, so switching to real Nemotron calls through Token Factory is a
+drop-in change, not a rewrite. That real-call path is wired but not yet
+verified — needs an API key and confirmation of the exact base URL / model
+catalog names from the Token Factory console.
 
 ## Setup
 
@@ -49,7 +55,7 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
-copy .env.example .env        # then fill in NEBIUS_API_KEY
+copy .env.example .env        # works as-is in demo mode, no key needed
 uvicorn app.main:app --reload
 ```
 

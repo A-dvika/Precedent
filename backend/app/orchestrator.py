@@ -68,31 +68,43 @@ def investigate(question: str, job_name: str):
             futures[pool.submit(fn)] = domain
         for future in as_completed(futures):
             domain = futures[future]
-            finding = future.result()
+            try:
+                finding = future.result()
+            except Exception as exc:  # noqa: BLE001 - surface any specialist failure to the stream
+                yield {"type": "specialist_error", "domain": domain, "message": str(exc)}
+                continue
             findings.append(finding)
             yield {"type": "specialist_result", "domain": domain, "finding": finding.model_dump()}
 
+    if not findings:
+        yield {"type": "error", "message": "all specialists failed; no findings to synthesize"}
+        return
+
     yield {"type": "synthesizing"}
-    client = get_client()
-    resp = client.chat.completions.create(
-        model=settings.reasoning_model,
-        messages=[
-            {"role": "system", "content": _SYNTHESIS_SYSTEM},
-            {
-                "role": "user",
-                "content": json.dumps(
-                    {
-                        "question": question,
-                        "job": job_run,
-                        "findings": [f.model_dump() for f in findings],
-                    }
-                ),
-            },
-        ],
-        temperature=0.2,
-        response_format={"type": "json_object"},
-    )
-    synthesis = json.loads(resp.choices[0].message.content)
+    try:
+        client = get_client()
+        resp = client.chat.completions.create(
+            model=settings.reasoning_model,
+            messages=[
+                {"role": "system", "content": _SYNTHESIS_SYSTEM},
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "question": question,
+                            "job": job_run,
+                            "findings": [f.model_dump() for f in findings],
+                        }
+                    ),
+                },
+            ],
+            temperature=0.2,
+            response_format={"type": "json_object"},
+        )
+        synthesis = json.loads(resp.choices[0].message.content)
+    except Exception as exc:  # noqa: BLE001 - surface synthesis failure instead of hanging the stream
+        yield {"type": "error", "message": f"synthesis failed: {exc}"}
+        return
 
     result = InvestigateResult(
         question=question,

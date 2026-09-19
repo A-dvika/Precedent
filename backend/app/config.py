@@ -19,4 +19,9 @@ settings = Settings()
 
 @lru_cache
 def get_client() -> OpenAI:
-    return OpenAI(api_key=settings.nebius_api_key, base_url=settings.nebius_base_url)
+    return OpenAI(
+        api_key=settings.nebius_api_key,
+        base_url=settings.nebius_base_url,
+        timeout=20.0,
+        max_retries=1,
+    )

@@ -1,7 +1,8 @@
 # Demo script
 
-Two acts, same underlying root cause, to show both the full investigation
-loop and the payoff of institutional memory.
+Three acts: a full investigation, the institutional-memory payoff, and a
+genuinely different, unresolved incident — to show both the headline
+feature and that the system isn't hardcoded to one story.
 
 ## Act 1 — full investigation
 
@@ -33,12 +34,40 @@ the Act 1 incident — no specialists dispatched, answer returned near-instantly
 with a pointed callout that this is a *recurrence* of an unresolved issue and
 a recommendation to escalate the still-open ticket.
 
-## Why this pairing
+## Act 3 — a genuinely new, unresolved issue
 
-- Proves the "hours -> seconds" claim twice, at two different speeds (full
-  multi-agent investigation vs. instant recall).
+**Question:** "Why did the nightly auth sync job fail?"
+**Job:** `nightly_auth_sync_job`, run `auth-20261015-0300`
+
+A different dependency (`auth-gateway`), a different failure shape (TLS
+certificate expiry, not a timeout), and no pre-existing ticket or deploy to
+correlate against.
+
+What the specialists find:
+- **Deploys** — nothing in the lookback window. Not relevant.
+- **Metrics** — no metrics tracked for `auth-gateway`. Not relevant.
+- **Logs** — the job repeatedly failed a TLS handshake with
+  `x509: certificate has expired or is not yet valid`. Relevant.
+- **Tickets** — one ticket links to `auth-gateway`, but it's closed and
+  unrelated. Not relevant.
+
+**Expected synthesis:** medium confidence (not high) — the system is honest
+that it only found one piece of correlated evidence, not four. Suggested
+action is "investigate directly," not "escalate ticket X," because there
+isn't one yet. This new incident also gets written to memory, so a repeat
+failure would now hit instant recall too.
+
+## Why this shape
+
+- Proves the "hours -> seconds" claim twice, at two different speeds in Act
+  1/2 (full multi-agent investigation vs. instant recall).
 - Turns "institutional memory" into a story with a point: the system surfaces
   an organizational failure (a known risk that got ignored) that a human
   doing manual 2am triage would likely miss.
+- Act 3 proves the system isn't scripted to always find a tidy four-system
+  story — sometimes the honest answer is "medium confidence, investigate
+  further," which is more credible than every demo ending in a perfect
+  ticket match.
 - Natural closer for the demo video: "same problem, caught instantly the
-  second time — that's the compounding value of institutional memory."
+  second time — that's the compounding value of institutional memory. And
+  when it's something genuinely new, it says so instead of forcing a story."

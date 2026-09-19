@@ -12,7 +12,14 @@ import * as tools from "./tools";
 import * as mockLlm from "./mockLlm";
 import { memoryStore } from "./memoryStore";
 
-const SPECIALIST_SERVICE = "pricing-service";
+// Which dependency service each job's specialists should investigate.
+// Real system: this would come from a service-ownership/dependency graph.
+const JOB_TO_SERVICE = {
+  settlement_batch_job: "pricing-service",
+  fx_reval_job: "pricing-service",
+  nightly_auth_sync_job: "auth-gateway",
+};
+const DEFAULT_SERVICE = "pricing-service";
 const TICKET_ID_RE = /^[A-Z]{2,}-\d+/;
 
 function extractTicketId(finding) {
@@ -28,9 +35,11 @@ export async function investigateLocal(question, jobName, onEvent) {
     return;
   }
 
+  const service = JOB_TO_SERVICE[jobName] || DEFAULT_SERVICE;
+
   onEvent({ type: "memory_check" });
   await mockLlm.thinkingDelay(400, 900);
-  const memoryHit = memoryStore.findMatch(SPECIALIST_SERVICE, job.error || "");
+  const memoryHit = memoryStore.findMatch(service, job.error || "");
   if (memoryHit) {
     onEvent({ type: "memory_hit", incident_id: memoryHit.incidentId, summary: memoryHit.summary });
     const result = {
@@ -59,9 +68,9 @@ export async function investigateLocal(question, jobName, onEvent) {
 
   const specialistJobs = {
     deploys: () => mockLlm.mockDeployFinding(job, tools.getDeploys(depSince, depUntil)),
-    metrics: () => mockLlm.mockMetricsFinding(job, tools.getMetrics(SPECIALIST_SERVICE, metSince, metUntil)),
+    metrics: () => mockLlm.mockMetricsFinding(job, tools.getMetrics(service, metSince, metUntil)),
     logs: () => mockLlm.mockLogsFinding(job, tools.getLogs(job.run_id)),
-    tickets: () => mockLlm.mockTicketsFinding(SPECIALIST_SERVICE, tools.getTickets(SPECIALIST_SERVICE)),
+    tickets: () => mockLlm.mockTicketsFinding(service, tools.getTickets(service)),
   };
 
   const domains = Object.keys(specialistJobs);
@@ -105,7 +114,7 @@ export async function investigateLocal(question, jobName, onEvent) {
   memoryStore.add({
     incidentId: job.run_id,
     jobName,
-    service: SPECIALIST_SERVICE,
+    service,
     errorText: job.error || "",
     summary: synthesis.short_summary || synthesis.root_cause,
     rootCause: synthesis.root_cause,

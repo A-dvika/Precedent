@@ -43,5 +43,23 @@
     "status": "SUCCESS",
     "error": null,
     "scheduler": "autosys"
+  },
+  {
+    "job_name": "nightly_auth_sync_job",
+    "run_id": "auth-20261015-0300",
+    "start_time": "2026-10-15T03:00:00Z",
+    "end_time": "2026-10-15T03:00:20Z",
+    "status": "FAILED",
+    "error": "TLS handshake failed: x509: certificate has expired or is not yet valid",
+    "scheduler": "autosys"
+  },
+  {
+    "job_name": "nightly_auth_sync_job",
+    "run_id": "auth-20261014-0300",
+    "start_time": "2026-10-14T03:00:00Z",
+    "end_time": "2026-10-14T03:00:18Z",
+    "status": "SUCCESS",
+    "error": null,
+    "scheduler": "autosys"
   }
 ]

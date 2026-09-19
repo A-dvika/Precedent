@@ -2,9 +2,18 @@ import { useReducer, useRef, useState } from "react";
 import SystemMap from "./components/SystemMap";
 import ChatPanel from "./components/ChatPanel";
 import ActivityLog from "./components/ActivityLog";
+import ConnectedSystems from "./components/ConnectedSystems";
+import StatsBar from "./components/StatsBar";
+import MemoryPanel from "./components/MemoryPanel";
 import { investigate } from "./api";
 import { reduceEvent, INITIAL_STATE } from "./reducer";
 import "./App.css";
+
+function shortSummaryFor(result) {
+  if (result.memory_hit) return result.memory_hit.summary;
+  const text = result.root_cause || "";
+  return text.length > 130 ? text.slice(0, 130) + "…" : text;
+}
 
 function App() {
   const [question, setQuestion] = useState("Why did the overnight settlement job fail?");
@@ -12,6 +21,7 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [elapsedMs, setElapsedMs] = useState(null);
+  const [history, setHistory] = useState([]);
   const [state, dispatch] = useReducer(reduceEvent, INITIAL_STATE);
   const { nodeStatus, edges, findings, result, errorMessage, log } = state;
   const startRef = useRef(null);
@@ -23,8 +33,24 @@ function App() {
     startRef.current = performance.now();
     await investigate(q, job, (event) => {
       dispatch(event);
-      if (event.type === "done" || event.type === "memory_hit") {
+      if (event.type === "memory_hit") {
         setElapsedMs(performance.now() - startRef.current);
+      }
+      if (event.type === "done") {
+        const elapsed = performance.now() - startRef.current;
+        setElapsedMs(elapsed);
+        setHistory((h) => [
+          ...h,
+          {
+            id: `${job}-${Date.now()}`,
+            jobName: job,
+            question: q,
+            shortSummary: shortSummaryFor(event.result),
+            confidence: event.result.confidence,
+            wasRecall: !!event.result.memory_hit,
+            elapsedMs: elapsed,
+          },
+        ]);
       }
     });
     setBusy(false);
@@ -61,6 +87,10 @@ function App() {
         </div>
         <div className="powered-by">Nemotron on Nebius Token Factory</div>
       </header>
+
+      <ConnectedSystems />
+      <StatsBar history={history} />
+
       <main>
         <div className="map-column">
           <div className="panel map-panel">
@@ -68,19 +98,22 @@ function App() {
           </div>
           <ActivityLog log={log} />
         </div>
-        <ChatPanel
-          question={question}
-          setQuestion={setQuestion}
-          jobName={jobName}
-          setJobName={setJobName}
-          onSubmit={() => runInvestigation(question, jobName)}
-          onScenario={handleScenario}
-          busy={busy}
-          result={result}
-          errorMessage={errorMessage}
-          hoveredFinding={hoveredFinding}
-          elapsedMs={elapsedMs}
-        />
+        <div className="side-column">
+          <ChatPanel
+            question={question}
+            setQuestion={setQuestion}
+            jobName={jobName}
+            setJobName={setJobName}
+            onSubmit={() => runInvestigation(question, jobName)}
+            onScenario={handleScenario}
+            busy={busy}
+            result={result}
+            errorMessage={errorMessage}
+            hoveredFinding={hoveredFinding}
+            elapsedMs={elapsedMs}
+          />
+          <MemoryPanel history={history} />
+        </div>
       </main>
     </div>
   );

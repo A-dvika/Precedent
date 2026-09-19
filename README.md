@@ -9,7 +9,12 @@ re-investigating from scratch — literally citing precedent. Built for the
 [Nebius x NVIDIA Global AI Hackathon](https://nebius-x-nvidia-global-ai-hackathon.devpost.com/).
 
 See [docs/architecture.md](docs/architecture.md) for the system design and
-[docs/demo_script.md](docs/demo_script.md) for the two-act demo scenario.
+[docs/demo_script.md](docs/demo_script.md) for the three-act demo scenario.
+
+The UI also tracks **institutional memory** as a visible, growing panel (not
+just an internal mechanic), a **connected-systems** strip showing which
+tools are wired in, and a **stats bar** estimating time saved across every
+investigation run in the session.
 
 ## Why this exists
 
@@ -33,9 +38,9 @@ across all of it in parallel and answers with citations, not a guess.
 ## Project status
 
 Fully working end to end in **demo mode** — no API key, and no backend
-required to try it. Both demo acts (full investigation, then instant memory
-recall) run correctly against the seeded dataset. See
-[docs/demo_script.md](docs/demo_script.md).
+required to try it. All three demo acts (full investigation, instant memory
+recall, and a genuinely new/unresolved incident) run correctly against the
+seeded dataset. See [docs/demo_script.md](docs/demo_script.md).
 
 Demo mode swaps the Nemotron calls for deterministic, rule-based logic over
 the same structured tool output a real model call would see — same
@@ -79,7 +84,8 @@ curl -N -X POST http://localhost:8000/investigate \
 ```
 
 Run it again with `job_name: fx_reval_job` after the first call to see the
-memory-hit path (Act 2 of the demo script).
+memory-hit path (Act 2), or `job_name: nightly_auth_sync_job` for the
+new/unresolved-incident path (Act 3).
 
 ### Frontend
 

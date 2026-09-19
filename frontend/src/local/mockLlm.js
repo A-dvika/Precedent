@@ -61,6 +61,7 @@ export async function mockLogsFinding(job, logs) {
   }
   const errorLines = logs.filter((l) => l.includes("ERROR"));
   const retryCount = errorLines.filter((l) => l.includes("retrying")).length;
+  const isTimeout = /timeout/i.test(job.error || "") || logs.some((l) => /timeout|slow response/i.test(l));
   let calledService = null;
   for (const l of logs) {
     if (l.includes("calling")) {
@@ -68,9 +69,12 @@ export async function mockLogsFinding(job, logs) {
       break;
     }
   }
+  const behavior = isTimeout
+    ? "hit slow responses and timed out"
+    : "hit repeated errors";
   return {
     relevant: true,
-    summary: `Job repeatedly called ${calledService || "a dependency"}, hit slow responses, retried ${retryCount} time(s), then failed: ${job.error}`,
+    summary: `Job repeatedly called ${calledService || "a dependency"}, ${behavior}, retried ${retryCount} time(s), then failed: ${job.error}`,
     evidence: `${errorLines.length} error lines, final: ${errorLines.at(-1) || job.error}`,
   };
 }

@@ -13,6 +13,13 @@ const SCENARIOS = [
     label: "Act 2 — FX reval job (run after Act 1)",
     hint: "Should hit institutional memory instantly",
   },
+  {
+    id: "act3",
+    job: "nightly_auth_sync_job",
+    question: "Why did the nightly auth sync job fail?",
+    label: "Act 3 — Auth sync job (new, unrelated)",
+    hint: "A genuinely new issue — no ticket, lower confidence",
+  },
 ];
 
 const CONFIDENCE_COLOR = {
@@ -80,6 +87,7 @@ export default function ChatPanel({
           <select value={jobName} onChange={(e) => setJobName(e.target.value)}>
             <option value="settlement_batch_job">settlement_batch_job</option>
             <option value="fx_reval_job">fx_reval_job</option>
+            <option value="nightly_auth_sync_job">nightly_auth_sync_job</option>
           </select>
         </label>
         <button type="submit" className="investigate-btn" disabled={busy}>
@@ -96,11 +104,25 @@ export default function ChatPanel({
 
       {errorMessage && <div className="error-box">{errorMessage}</div>}
 
+      {!result && !errorMessage && !busy && (
+        <div className="empty-state">
+          Pick a scenario above, or ask your own question about one of the
+          seeded jobs, to see Precedent investigate.
+        </div>
+      )}
+
       {result && (
         <div className="result-box">
           <div className="result-header">
-            {result.memory_hit && (
+            {result.memory_hit ? (
               <div className="memory-badge">Matched prior incident {result.memory_hit.incident_id}</div>
+            ) : (
+              result.findings?.length > 0 && (
+                <div className="checked-badge">
+                  Checked {result.findings.length} systems ·{" "}
+                  {result.findings.filter((f) => f.relevant).length} relevant
+                </div>
+              )
             )}
             <ElapsedBadge elapsedMs={elapsedMs} memoryHit={!!result.memory_hit} />
           </div>

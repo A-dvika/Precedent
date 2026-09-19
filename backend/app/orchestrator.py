@@ -22,7 +22,14 @@ _SYNTHESIS_SYSTEM = (
     '"suggested_action": "...", "confidence": "high|medium|low"}'
 )
 
-SPECIALIST_SERVICE = "pricing-service"  # single dependency service in this demo
+# Which dependency service each job's specialists should investigate.
+# Real system: this would come from a service-ownership/dependency graph.
+JOB_TO_SERVICE = {
+    "settlement_batch_job": "pricing-service",
+    "fx_reval_job": "pricing-service",
+    "nightly_auth_sync_job": "auth-gateway",
+}
+DEFAULT_SERVICE = "pricing-service"
 
 
 def investigate(question: str, job_name: str):
@@ -31,10 +38,12 @@ def investigate(question: str, job_name: str):
         yield {"type": "error", "message": f"no run found for job {job_name}"}
         return
 
+    service = JOB_TO_SERVICE.get(job_name, DEFAULT_SERVICE)
+
     yield {"type": "memory_check"}
     if settings.demo_mode:
         mock_llm.thinking_delay(0.4, 0.9)
-    memory_hit = memory_store.find_match(SPECIALIST_SERVICE, job_run.get("error") or "")
+    memory_hit = memory_store.find_match(service, job_run.get("error") or "")
     if memory_hit:
         yield {"type": "memory_hit", "incident_id": memory_hit.incident_id, "summary": memory_hit.summary}
         result = InvestigateResult(
@@ -58,9 +67,9 @@ def investigate(question: str, job_name: str):
 
     jobs = {
         "deploys": lambda: specialists.deploy_specialist(job_run),
-        "metrics": lambda: specialists.metrics_specialist(job_run, SPECIALIST_SERVICE),
+        "metrics": lambda: specialists.metrics_specialist(job_run, service),
         "logs": lambda: specialists.logs_specialist(job_run),
-        "tickets": lambda: specialists.tickets_specialist(SPECIALIST_SERVICE),
+        "tickets": lambda: specialists.tickets_specialist(service),
     }
 
     findings: list[Finding] = []
@@ -126,7 +135,7 @@ def investigate(question: str, job_name: str):
     memory_store.add(
         incident_id=job_run["run_id"],
         job_name=job_name,
-        service=SPECIALIST_SERVICE,
+        service=service,
         error_text=job_run.get("error") or "",
         summary=synthesis.get("short_summary", synthesis["root_cause"]),
         root_cause=synthesis["root_cause"],

@@ -75,15 +75,19 @@ def mock_logs_finding(job: dict, logs: list[str]) -> dict:
         return {"relevant": False, "summary": "No failure signal in the logs.", "evidence": "job succeeded"}
     error_lines = [l for l in logs if "ERROR" in l]
     retry_count = sum(1 for l in error_lines if "retrying" in l)
+    is_timeout = bool(re.search(r"timeout", job.get("error") or "", re.I)) or any(
+        re.search(r"timeout|slow response", l, re.I) for l in logs
+    )
     called_service = None
     for l in logs:
         if "calling" in l:
             called_service = l.split("calling", 1)[1].strip().split(" ")[0].rstrip(".")
             break
+    behavior = "hit slow responses and timed out" if is_timeout else "hit repeated errors"
     return {
         "relevant": True,
         "summary": (
-            f"Job repeatedly called {called_service or 'a dependency'}, hit slow responses, "
+            f"Job repeatedly called {called_service or 'a dependency'}, {behavior}, "
             f"retried {retry_count} time(s), then failed: {job.get('error')}"
         ),
         "evidence": f"{len(error_lines)} error lines, final: {error_lines[-1] if error_lines else job.get('error')}",

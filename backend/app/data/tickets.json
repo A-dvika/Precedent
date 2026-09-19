@@ -1,0 +1,20 @@
+[
+  {
+    "ticket_id": "PERF-4821",
+    "title": "pricing-lib 2.3.1 shows perf regression under concurrent load in staging",
+    "status": "Open",
+    "priority": "P3",
+    "created_at": "2026-08-20T10:00:00Z",
+    "description": "Load testing pricing-lib 2.3.1 shows p99 latency roughly 90x baseline under concurrent request load. Deprioritized pending capacity; not blocked for release.",
+    "linked_service": "pricing-service"
+  },
+  {
+    "ticket_id": "OPS-1190",
+    "title": "auth-gateway 5.0.2 rollout tracking",
+    "status": "Closed",
+    "priority": "P4",
+    "created_at": "2026-09-08T09:00:00Z",
+    "description": "Routine rollout tracking ticket, no issues found.",
+    "linked_service": "auth-gateway"
+  }
+]

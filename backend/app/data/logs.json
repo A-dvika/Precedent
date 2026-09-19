@@ -1,0 +1,20 @@
+{
+  "sb-20260910-0217": [
+    "02:10:01 INFO settlement_batch_job started",
+    "02:10:05 INFO calling pricing-service.get_quote for 1200 instruments",
+    "02:11:10 WARN pricing-service.get_quote slow response: 3120ms",
+    "02:12:40 WARN pricing-service.get_quote slow response: 3980ms",
+    "02:14:02 ERROR pricing-service.get_quote timeout, retrying (attempt 2/6)",
+    "02:15:10 ERROR pricing-service.get_quote timeout, retrying (attempt 4/6)",
+    "02:16:45 ERROR pricing-service.get_quote timeout, retrying (attempt 6/6)",
+    "02:17:00 ERROR settlement_batch_job failed: max retries exceeded"
+  ],
+  "fx-20260928-0305": [
+    "03:00:02 INFO fx_reval_job started",
+    "03:00:10 INFO calling pricing-service.get_quote for 340 instruments",
+    "03:01:30 WARN pricing-service.get_quote slow response: 3760ms",
+    "03:02:50 ERROR pricing-service.get_quote timeout, retrying (attempt 2/4)",
+    "03:04:20 ERROR pricing-service.get_quote timeout, retrying (attempt 4/4)",
+    "03:05:00 ERROR fx_reval_job failed: max retries exceeded"
+  ]
+}

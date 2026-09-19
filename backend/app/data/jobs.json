@@ -1,0 +1,47 @@
+[
+  {
+    "job_name": "settlement_batch_job",
+    "run_id": "sb-20260910-0217",
+    "start_time": "2026-09-10T02:10:00Z",
+    "end_time": "2026-09-10T02:17:00Z",
+    "status": "FAILED",
+    "error": "TimeoutError: dependency call to pricing-service exceeded 300s after 6 retries",
+    "scheduler": "autosys"
+  },
+  {
+    "job_name": "settlement_batch_job",
+    "run_id": "sb-20260909-0205",
+    "start_time": "2026-09-09T02:05:00Z",
+    "end_time": "2026-09-09T02:11:00Z",
+    "status": "SUCCESS",
+    "error": null,
+    "scheduler": "autosys"
+  },
+  {
+    "job_name": "eod_report_job",
+    "run_id": "eod-20260910-0130",
+    "start_time": "2026-09-10T01:30:00Z",
+    "end_time": "2026-09-10T01:34:00Z",
+    "status": "SUCCESS",
+    "error": null,
+    "scheduler": "autosys"
+  },
+  {
+    "job_name": "fx_reval_job",
+    "run_id": "fx-20260928-0305",
+    "start_time": "2026-09-28T03:00:00Z",
+    "end_time": "2026-09-28T03:05:00Z",
+    "status": "FAILED",
+    "error": "TimeoutError: dependency call to pricing-service exceeded 300s after 4 retries",
+    "scheduler": "autosys"
+  },
+  {
+    "job_name": "fx_reval_job",
+    "run_id": "fx-20260927-0300",
+    "start_time": "2026-09-27T03:00:00Z",
+    "end_time": "2026-09-27T03:04:00Z",
+    "status": "SUCCESS",
+    "error": null,
+    "scheduler": "autosys"
+  }
+]

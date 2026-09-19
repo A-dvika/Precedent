@@ -29,8 +29,13 @@ across all of it in parallel and answers with citations, not a guess.
 
 ## Project status
 
-Backend scaffold (FastAPI + orchestrator + specialists + simulated dataset)
-is in place. Frontend (chat + live system-map visualization) is next.
+Backend (FastAPI + orchestrator + specialists + simulated dataset) and
+frontend (chat panel + live SVG system map) are both scaffolded and wired
+together via SSE. Verified locally: server boots, tool connectors and memory
+matching are correct against the seeded demo data, and the event-handling
+logic (system map / chat rendering) is covered by reducer tests. Not yet
+verified: actual Nemotron calls through Token Factory — needs a real API key
+and confirmation of the exact base URL / model catalog names.
 
 ## Setup
 
@@ -60,7 +65,14 @@ memory-hit path (Act 2 of the demo script).
 
 ### Frontend
 
-Not yet scaffolded — see project status above.
+```bash
+cd frontend
+npm install
+copy .env.example .env
+npm run dev
+```
+
+Opens on `http://localhost:5173`. Requires the backend running on `:8000`.
 
 ## License
 

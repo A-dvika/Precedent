@@ -8,8 +8,10 @@ the same failure happens, Precedent recognizes it instantly instead of
 re-investigating from scratch — literally citing precedent. Built for the
 [Nebius x NVIDIA Global AI Hackathon](https://nebius-x-nvidia-global-ai-hackathon.devpost.com/).
 
-See [docs/architecture.md](docs/architecture.md) for the system design and
-[docs/demo_script.md](docs/demo_script.md) for the three-act demo scenario.
+See [docs/architecture.md](docs/architecture.md) for the system design,
+[docs/demo_script.md](docs/demo_script.md) for the three-act demo scenario,
+and [docs/submission.md](docs/submission.md) for the Devpost submission
+draft (description, track, video outline).
 
 The UI also tracks **institutional memory** as a visible, growing panel (not
 just an internal mechanic), a **connected-systems** strip showing which

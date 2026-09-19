@@ -1,12 +1,13 @@
 :root {
   color-scheme: dark;
-  font: 16px/1.5 system-ui, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.5 "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
+  background: #090a0e;
 }
 
 #root {

@@ -1,16 +1,66 @@
+const SCENARIOS = [
+  {
+    id: "act1",
+    job: "settlement_batch_job",
+    question: "Why did the overnight settlement job fail?",
+    label: "Act 1 — Settlement job failure",
+    hint: "Full investigation across 4 systems",
+  },
+  {
+    id: "act2",
+    job: "fx_reval_job",
+    question: "Why did the FX reval job fail?",
+    label: "Act 2 — FX reval job (run after Act 1)",
+    hint: "Should hit institutional memory instantly",
+  },
+];
+
+const CONFIDENCE_COLOR = {
+  high: "#3ddc8c",
+  medium: "#f5a623",
+  low: "#ff8489",
+};
+
+function ElapsedBadge({ elapsedMs, memoryHit }) {
+  if (elapsedMs == null) return null;
+  const seconds = (elapsedMs / 1000).toFixed(1);
+  return (
+    <div className={`elapsed-badge ${memoryHit ? "elapsed-badge--instant" : ""}`}>
+      {memoryHit ? "⚡ Instant recall" : "Investigated"} in <strong>{seconds}s</strong>
+    </div>
+  );
+}
+
 export default function ChatPanel({
   question,
   setQuestion,
   jobName,
   setJobName,
   onSubmit,
+  onScenario,
   busy,
   result,
   errorMessage,
   hoveredFinding,
+  elapsedMs,
 }) {
   return (
     <div className="chat-panel">
+      <div className="scenario-row">
+        {SCENARIOS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            className={`scenario-btn ${jobName === s.job ? "scenario-btn--active" : ""}`}
+            disabled={busy}
+            onClick={() => onScenario(s)}
+          >
+            <span className="scenario-label">{s.label}</span>
+            <span className="scenario-hint">{s.hint}</span>
+          </button>
+        ))}
+      </div>
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -28,12 +78,12 @@ export default function ChatPanel({
         <label>
           Job
           <select value={jobName} onChange={(e) => setJobName(e.target.value)}>
-            <option value="settlement_batch_job">settlement_batch_job (Act 1)</option>
-            <option value="fx_reval_job">fx_reval_job (Act 2)</option>
+            <option value="settlement_batch_job">settlement_batch_job</option>
+            <option value="fx_reval_job">fx_reval_job</option>
           </select>
         </label>
-        <button type="submit" disabled={busy}>
-          {busy ? "Investigating..." : "Investigate"}
+        <button type="submit" className="investigate-btn" disabled={busy}>
+          {busy ? "Investigating…" : "Investigate"}
         </button>
       </form>
 
@@ -48,22 +98,32 @@ export default function ChatPanel({
 
       {result && (
         <div className="result-box">
-          {result.memory_hit && (
-            <div className="memory-badge">
-              Matched prior incident {result.memory_hit.incident_id}
-            </div>
-          )}
+          <div className="result-header">
+            {result.memory_hit && (
+              <div className="memory-badge">Matched prior incident {result.memory_hit.incident_id}</div>
+            )}
+            <ElapsedBadge elapsedMs={elapsedMs} memoryHit={!!result.memory_hit} />
+          </div>
+
           <h3>Root cause</h3>
-          <p>{result.root_cause}</p>
+          <p className="root-cause-text">{result.root_cause}</p>
+
           <h4>Evidence trail</h4>
-          <ul>
+          <ol className="evidence-trail">
             {(result.evidence_trail || []).map((e, i) => (
               <li key={i}>{e}</li>
             ))}
-          </ul>
-          <h4>Suggested action</h4>
-          <p>{result.suggested_action}</p>
-          <div className="confidence">Confidence: {result.confidence}</div>
+          </ol>
+
+          <div className="action-box">
+            <h4>Suggested action</h4>
+            <p>{result.suggested_action}</p>
+          </div>
+
+          <div className="confidence" style={{ color: CONFIDENCE_COLOR[result.confidence] || "#9aa0ae" }}>
+            <span className="confidence-dot" style={{ background: CONFIDENCE_COLOR[result.confidence] || "#9aa0ae" }} />
+            Confidence: {result.confidence}
+          </div>
         </div>
       )}
     </div>

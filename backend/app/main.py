@@ -7,7 +7,7 @@ from sse_starlette.sse import EventSourceResponse
 from .orchestrator import investigate
 from .schemas import InvestigateRequest
 
-app = FastAPI(title="Cross-System Incident Investigator")
+app = FastAPI(title="Precedent")
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,8 +1,11 @@
-# Cross-System Incident Investigator
+# Precedent
 
-Ask one question — "why did the overnight job fail?" — and get a root cause
-in seconds instead of hours, with a full evidence trail across every system
-involved (job scheduler, CI/CD, metrics, logs, ticketing). Built for the
+Cross-system incident investigator with institutional memory. Ask one
+question — "why did the overnight job fail?" — and get a root cause in
+seconds instead of hours, with a full evidence trail across every system
+involved (job scheduler, CI/CD, metrics, logs, ticketing). The second time
+the same failure happens, Precedent recognizes it instantly instead of
+re-investigating from scratch — literally citing precedent. Built for the
 [Nebius x NVIDIA Global AI Hackathon](https://nebius-x-nvidia-global-ai-hackathon.devpost.com/).
 
 See [docs/architecture.md](docs/architecture.md) for the system design and
